@@ -1,11 +1,7 @@
 package activity_1;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Banker {
 	private int unitsOfResource;
@@ -124,12 +120,25 @@ public class Banker {
 	private boolean bankerAlgorithm(int nUnitsOnHand,List<ClientConfig> copyVals){
 		ClientConfig[] pairsArray = (ClientConfig[]) clientMap.values().toArray(); 
 		// TODO sort the goddamn array
+        Arrays.sort(pairsArray, new ByUnitsRemaining());
 		for (int i = 0; i < pairsArray.length - 1; i++) {
 			if (pairsArray[i].getUnitRemaining() > nUnitsOnHand) return false;
 			nUnitsOnHand += pairsArray[i].getUnitsAllocated();
 		}
 		return true;
 	}
+
+    private class ByUnitsRemaining implements Comparator<ClientConfig>{
+        public int compare(ClientConfig configA, ClientConfig configB){
+            if(configA.getUnitRemaining() < configB.getUnitRemaining()) {
+                return -1;
+            } else if (configA.getUnitRemaining() > configB.getUnitRemaining()){
+                return 1;
+            }else {
+                return 0;
+            }
+        }
+    }
 
 	/**
 	 * Threadsafe class containing client allocation data 
