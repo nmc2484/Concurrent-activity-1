@@ -3,36 +3,64 @@ package activity_1;
 import java.util.ArrayList;
 
 public class Driver {
-	final private static int numBankerResources = 5;
-	final private static int numClients = 0;
-	
-	final private static int nUnits = 0;
-	final private static int nRequests = 0;
-	final private static long minSleepMillis = 0;
-	final private static long maxSleepMillis = 413;
-	
-	// Client args
-	// Name, nUnits, nRequests, minSleepMillis, maxSleepMillis
-	
+	/**
+	 * The total amount of resources the banker is able to allocate
+	 */
+	final private static int numBankerResources = 10;
+	/**
+	 * The number of clients which will make claims on resources
+	 * owned by the banker
+	 */
+	final private static int numClients = 3;
 
 	/**
-	 * @param args
+	 * Maximum number which a client may claim from the banker
+	 * Actual client claims are randomized between 1 and this number
+	 */
+	final private static int nUnits = 5;
+
+	/**
+	 * Number of times a client will either request 
+	 * or release resources
+	 */
+	final private static int nRequests = 10;
+
+	/**
+	 * The minimum time a client may sleep after
+	 * requesting or releasing resources
+	 */
+	final private static long minSleepMillis = 0;
+
+	/**
+	 * The maximum time a client may sleep after
+	 * requesting or releasing resources
+	 */
+	final private static long maxSleepMillis = 413;
+
+	/**
+	 * Main method for Concurrent Activity 1
+	 * Instantiates a Banker, then registers numClients
+	 * clients with it. Finally, runs clients.
+	 * @param args unusued.
 	 */
 	public static void main(String[] args) {
-		// TODO config based on passed args
-		
 		// Create a banker object
 		Banker banker = new Banker(numBankerResources);
-		
+
+		// Generate and register clients based on global vars
 		ArrayList<Client> clients = new ArrayList<Client>(numClients);
 		for (int i = 1; i < numClients; i++) {
-			// TODO finish dis here!
 			clients.add(new Client("client" + i, banker, nUnits, nRequests, minSleepMillis, maxSleepMillis));
 		}
+		// Run clients
 		for (Client client : clients) {
 			client.run();
-			// Some shit 'bout "join"
+		}
+		// Kill clients
+		for (Client client : clients) {
+			try {
+				client.join();
+			} catch (InterruptedException ignore) {/**/}
 		}
 	}
-
 }
