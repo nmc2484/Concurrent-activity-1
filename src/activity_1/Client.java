@@ -28,6 +28,10 @@ public class Client extends Thread {
 		this.maxSleepMillis = maxSleepMillis;
 	}
 
+    public boolean registeredUnits() {
+		return nUnits > 0;
+	}
+
 	/**
 	 * Run method for Thread subclass.
 	 * 
