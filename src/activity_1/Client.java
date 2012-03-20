@@ -1,5 +1,7 @@
 package activity_1;
 
+import java.util.Random;
+
 public class Client extends Thread {
 	private Banker banker;
 	private int nUnits;
@@ -17,15 +19,30 @@ public class Client extends Thread {
 	}
 
 	public void run() {
-		// TODO "up to" nUnits
-		this.banker.setClaim(this.nUnits);
+		// "up to" nUnits
+		int claimSize = (int) (1 + (Math.random() * this.nUnits));
+		this.banker.setClaim(claimSize);
 		for (int i = 1; i <= nRequests; i++) {
 			if (banker.remaining() == 0) {
 				banker.release(nUnits);
+			} 
+			else if (banker.allocated() == 0){
+				banker.request(nUnits);
 			} else {
 				// Request *some* units
-				// TODO randomize
-				banker.request(1);
+				Random r = new Random();
+				boolean probAction = r.nextBoolean();
+				//random 50/50 request or release resources
+				if(probAction){
+					//if release, release at least 1
+					int releaseUnits = (int) (1 + (Math.random() * (banker.allocated() - 1)));
+					banker.release(releaseUnits);
+				}
+				else{
+					//if request, request at least 1
+					int requestUnits = (int) (1 + (Math.random() * (banker.remaining() - 1)));
+					banker.request(requestUnits);
+				}
 			}
 			try {
 				// Thread sleeps for random time between minSleepMillis and maxSleepMillis
