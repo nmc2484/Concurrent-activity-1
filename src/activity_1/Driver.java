@@ -14,8 +14,8 @@ public class Driver {
 	final private static int numClients = 3;
 
 	/**
-	 * Maximum number which a client may claim from the banker
-	 * Actual client claims are randomized between 1 and this number
+	 * Maximum number which any client may claim from the banker
+	 * Note: We randomize the number of units clients may actually claim
 	 */
 	final private static int nUnits = 5;
 
@@ -50,7 +50,9 @@ public class Driver {
 		// Generate and register clients based on global vars
 		ArrayList<Client> clients = new ArrayList<Client>(numClients);
 		for (int i = 1; i < numClients; i++) {
-			clients.add(new Client("client" + i, banker, nUnits, nRequests, minSleepMillis, maxSleepMillis));
+			// We add some nondeterminism by randomizing maximum client claim size
+			int claimSize = (int) (1 + (Math.random() * nUnits));
+			clients.add(new Client("client" + i, banker, claimSize, nRequests, minSleepMillis, maxSleepMillis));
 		}
 		// Run clients
 		for (Client client : clients) {
