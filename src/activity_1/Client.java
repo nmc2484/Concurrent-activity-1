@@ -28,6 +28,10 @@ public class Client extends Thread {
 		this.maxSleepMillis = maxSleepMillis;
 	}
 
+	/**
+	 * TODO get rid of argh die
+	 * @return boolean indicating registration status
+	 */
     public boolean registeredUnits() {
 		return nUnits > 0;
 	}

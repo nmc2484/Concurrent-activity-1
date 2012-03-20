@@ -56,7 +56,7 @@ public class Driver {
 		}
 		// Run clients
 		for (Client client : clients) {
-			client.run();
+			client.start();
 		}
 		// Kill clients
 		for (Client client : clients) {
