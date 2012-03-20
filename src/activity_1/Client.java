@@ -31,6 +31,11 @@ public class Client extends Thread {
 	/**
 	 * Run method for Thread subclass.
 	 * 
+	 * Makes a claim with banker, and cycles
+	 * nRequests times, either requesting or
+	 * releasing units each time. Sleeps a 
+	 * random time between minSleepMillis and
+	 * maxSleepMillis after each cycle.
 	 */
 	public void run() {
 		// Claim nUnits resources		
