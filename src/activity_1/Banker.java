@@ -13,12 +13,14 @@ public class Banker {
 	private Map<Client, ClientConfig> clientMap;
 
 	/**
-	 * Construct a Banker with a total resource capacity of nTotalUnits
+	 * Construct a Banker with a total resource capacity of nTotalUnits.
+	 * Also, initialize nUnitsOnHand to totalUnits.
 	 * @param nTotalUnits of total resource capacity
 	 */
 	public Banker(int nTotalUnits) {
 		clientMap = Collections.synchronizedMap(new HashMap<Client, Banker.ClientConfig>());
 		totalUnits = nTotalUnits;
+		nUnitsOnHand = nTotalUnits;
 	}
 
 	/**
