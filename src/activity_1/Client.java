@@ -38,7 +38,8 @@ public class Client extends Thread {
 	 * maxSleepMillis after each cycle.
 	 */
 	public void run() {
-		// Claim nUnits resources		
+		// Claim nUnits resources
+        System.out.println("this should be " + nUnits);
 		this.banker.setClaim(nUnits);
 		// Cycle nRequests times
 		for (int i = 1; i <= nRequests; i++) {
@@ -50,8 +51,10 @@ public class Client extends Thread {
 			else if (banker.allocated() == 0){
 				// If this client has not acquired any resources,
 				// request an amount between 1 and the maximum claim
-				int requestSize = (int) (1 + (Math.random() * this.nUnits));
-				banker.request(requestSize);
+				Random randomGenerator = new Random();
+                int randomInt = randomGenerator.nextInt(banker.remaining()) + 1;
+                System.out.println("the random int" + randomInt);
+				banker.request(randomInt);
 			} else {
 				// This client has already acquired some resources,
 				// and there is room to acquire some more.
@@ -62,13 +65,18 @@ public class Client extends Thread {
 				System.out.println("Probaction == " + probAction);
 				if(probAction){
 					//Request between 1 and numUnitsAvailable units
-					int requestUnits = (int) (1 + (Math.random() * (banker.remaining() - 1)));
-					banker.request(requestUnits);
+                    Random randomGenerator = new Random();
+                    int randomInt = randomGenerator.nextInt(banker.remaining()) + 1;
+					//int requestUnits = (int) (1 + (Math.random() * (banker.remaining() - 1)));
+					banker.request(randomInt);
 				}
 				else{
 					//Release between 1 and numUnitsAllocated units
-					int releaseUnits = 1 + (int) ( (Math.random() * (banker.allocated() - 1)));
-					banker.release(releaseUnits);
+                    Random randomGenerator = new Random();
+                    int randomInt = randomGenerator.nextInt(banker.allocated()) + 1;
+                    System.out.println("the release random int " + randomInt);
+					//int releaseUnits = 1 + (int) ( (Math.random() * (banker.allocated() - 1)));
+					banker.release(randomInt);
 				}
 			}
 			try {

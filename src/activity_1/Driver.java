@@ -6,7 +6,7 @@ public class Driver {
 	/**
 	 * The total amount of resources the banker is able to allocate
 	 */
-	final private static int numBankerResources = 20;
+	final private static int numBankerResources = 2000;
 	/**
 	 * The number of clients which will make claims on resources
 	 * owned by the banker
@@ -51,8 +51,8 @@ public class Driver {
 		ArrayList<Client> clients = new ArrayList<Client>(numClients);
 		for (int i = 1; i < numClients; i++) {
 			// We add some nondeterminism by randomizing maximum client claim size
-			int claimSize = (int) (1 + (Math.random() * nUnits));
-			clients.add(new Client("client" + i, banker, claimSize, nRequests, minSleepMillis, maxSleepMillis));
+			//int claimSize = (int) (1 + (Math.random() * nUnits));
+			clients.add(new Client("client" + i, banker, nUnits, nRequests, minSleepMillis, maxSleepMillis));
 		}
 		// Run clients
 		for (Client client : clients) {
