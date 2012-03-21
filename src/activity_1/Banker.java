@@ -8,8 +8,9 @@ import java.util.Map;
 
 
 public class Banker {
-	private int totalUnits;
+	private final int totalUnits;
 	private int nUnitsOnHand;
+    private int nUnitsLeftToClaim;
 	private Map<Client, ClientConfig> clientMap;
 
 	/**
@@ -21,6 +22,7 @@ public class Banker {
 		clientMap = Collections.synchronizedMap(new HashMap<Client, Banker.ClientConfig>());
 		totalUnits = nTotalUnits;
 		nUnitsOnHand = nTotalUnits;
+        nUnitsLeftToClaim =nTotalUnits;
 	}
 
 	/**
@@ -30,9 +32,16 @@ public class Banker {
 	 */
 	public synchronized void setClaim(int nUnits) {
 		Client client = (Client) Thread.currentThread();
-		if (clientMap.containsKey(client) || nUnits < 1 || nUnits <= totalUnits) {
+		if (clientMap.containsKey(client) || nUnits > -1 ||  nUnitsLeftToClaim >= 0) {
+			//if(nUnits > nUnitsLeftToClaim){
+			//	nUnits = nUnitsLeftToClaim;
+			//}
 			clientMap.put(client, new ClientConfig(nUnits));
-			System.out.println("Thread " + client.getName() + " sets a claim for " + nUnits + " units.");
+			System.out.println("Thread " + client.getName()
+					+ " sets a claim for " + nUnits + " units.");
+            System.out.println(nUnitsLeftToClaim);
+            System.out.println(nUnits);
+			nUnitsLeftToClaim -= nUnits;
 		} else {
 			System.out.println("Method preconditions failed - exiting...");
 			System.exit(1);
@@ -60,13 +69,13 @@ public class Banker {
 
 		// Duplicate parameters and run Banker's Algorithm
 		HashMap<Client, ClientConfig> dClientMap = new HashMap<Client, ClientConfig>(clientMap);
-		int dUnitsOnHand = nUnitsOnHand;
+		int dUnitsOnHand = this.nUnitsOnHand;
 		boolean safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
 
 		// If the state created by this state is safe, allocate the units
 		if (safeState) {
-			System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
 			clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated() + nUnits);
+            System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
 
 			// Decrement pool of remaining resources by nUnits
 			this.nUnitsOnHand -= nUnits;
@@ -79,28 +88,30 @@ public class Banker {
 				System.out.println("Thread " + client.getName() + " waits.");
 				try {
 					// Thread waits until notified
-					synchronized (this){this.wait();}
+					//synchronized (this){this.wait();}
+                    synchronized (client){Thread.currentThread().join(); }
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
 
 				// Duplicate parameters and run Banker's Algorithm
-				dClientMap = new HashMap<Client, ClientConfig>(clientMap);
-				dUnitsOnHand = nUnitsOnHand;
+				//dClientMap = new HashMap<Client, ClientConfig>(clientMap);
+				//dUnitsOnHand = this.nUnitsOnHand;
 				safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
 
 				// If the state created by this state is safe, allocate the units
 				if (safeState) {
-					System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
 					clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated() + nUnits);
+                    System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
 
 					// Decrement pool of remaining resources by nUnits
 					this.nUnitsOnHand -= nUnits;
 					System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
 					// Return to the caller
-					return true;
+					break;
 				}
 			}
 		}
+        return true;
 	}
 
 	/**
@@ -111,7 +122,7 @@ public class Banker {
 	 */
 	public synchronized void release(int nUnits) {
 		// Only proceed if this client has been registered
-		if (!clientMap.containsKey((Client) Thread.currentThread())) System.exit(1);
+		if (!clientMap.containsKey((Client) Thread.currentThread())){ System.exit(1);  }
 
 		// Exit if nUnits is non-positive or exceeds current thread's remaining claim
 		Client client = (Client) Thread.currentThread();
@@ -128,7 +139,7 @@ public class Banker {
 		this.nUnitsOnHand += nUnits;
 		System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
 
-        synchronized (this) {this.notifyAll();}
+        synchronized (Thread.currentThread()) {Thread.currentThread().notifyAll();}
 		return;
 	}
 
@@ -161,7 +172,7 @@ public class Banker {
 	 *            currentAllocation and remainingClaim
 	 * @return true if input state is safe, false otherwise
 	 */
-	private boolean bankersAlgorithm(int nUnitsOnHand, HashMap<Client, ClientConfig> copyValls) {
+	private synchronized boolean bankersAlgorithm(int CopynUnitsOnHand, HashMap<Client, ClientConfig> copyValls) {
 		// Create the array of client configs
 		ClientConfig[] clientConfig = (ClientConfig[])copyValls.values().toArray(new ClientConfig[0]);
 
@@ -170,13 +181,14 @@ public class Banker {
 
 		// Perform algorithmic magic
 		for (int i = 0; i < clientConfig.length - 1; i++) {
-			if (clientConfig[i].getUnitsRemaining() > nUnitsOnHand){
-            System.out.println(nUnitsOnHand);
-            System.out.println(clientConfig[i].getUnitsRemaining()  ) ;
-            System.out.println("should be false");
+			if (clientConfig[i].getUnitsRemaining() > CopynUnitsOnHand){
+           //System.out.println(nUnitsOnHand);
+           //System.out.println(clientConfig[i].getUnitsRemaining()  ) ;
+           System.out.println("should be false");
             return false;
             }
-            nUnitsOnHand += clientConfig[i].getUnitsAllocated();
+            this.nUnitsOnHand += clientConfig[i].getUnitsAllocated();
+            return true;
 		}
 		return true;
 	}
@@ -187,7 +199,7 @@ public class Banker {
 	 */
 	private class ByUnitsRemaining implements Comparator<ClientConfig>{
 
-		public int compare(ClientConfig configA, ClientConfig configB) {
+		public synchronized int compare(ClientConfig configA, ClientConfig configB) {
             return configA.getUnitsRemaining() - configB.getUnitsRemaining();
 		}
 	}
