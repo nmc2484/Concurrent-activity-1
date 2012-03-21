@@ -75,16 +75,20 @@ public class Banker {
 			// Return to the caller
 			return true;
 		} else {
+			// Requesting nUnits would generate an unsafe state
 			while (true) {
 				System.out.println("Thread " + client.getName() + " waits.");
 				try {
+					// Thread waits until notified
 					client.wait();
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
+				
 				// Duplicate parameters and run Banker's Algorithm
 				dClientMap = new HashMap<Client, ClientConfig>(clientMap);
 				dUnitsOnHand = nUnitsOnHand;
 				safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
+				
 				// If the state created by this state is safe, allocate the units
 				if (safeState) {
 					System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
@@ -106,32 +110,24 @@ public class Banker {
 	 * @param nUnits
 	 *            to deallocate
 	 */
-	public void release(int nUnits) {
+	public synchronized void release(int nUnits) {
 		// Only proceed if this client has been registered
-		boolean containsKey;
-		Client client = null;
-		ClientConfig clientConfig = null;
-		synchronized (this) {
-			containsKey = clientMap
-			.containsKey((Client) Thread.currentThread());
-			if (containsKey) {
-				client = (Client) Thread.currentThread();
-				clientConfig = clientMap.get(client);
-			} else {
-				// Client has not been registered
-				System.exit(1);
-			}
-		}
-		// Exit if nUnits is nonpositive or exceeds units allocated
+		if (!clientMap.containsKey((Client) Thread.currentThread())) System.exit(1);
+
+		// Exit if nUnits is non-positive or exceeds current thread's remaining claim
+		Client client = (Client) Thread.currentThread();
+		ClientConfig clientConfig = clientMap.get(client);
 		if (nUnits < 1 || nUnits > clientConfig.getUnitsAllocated()) {
 			System.exit(1);
 		}
 
-		// Release nUnits
-		System.out.println("Thread " + client.getName() + " releases " + nUnits
-				+ " units.");
-		clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated()
-				- nUnits);
+		// Release nUnits from client's allocation
+		System.out.println("Thread " + client.getName() + " releases " + nUnits + " units.");
+		clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated()	- nUnits);
+		
+		// Increment banker's unit pool
+		this.nUnitsOnHand += nUnits;
+		System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
 		notifyAll();
 		return;
 	}
