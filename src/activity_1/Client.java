@@ -29,14 +29,6 @@ public class Client extends Thread {
 	}
 
 	/**
-	 * TODO get rid of argh die
-	 * @return boolean indicating registration status
-	 */
-    public boolean registeredUnits() {
-		return nUnits > 0;
-	}
-
-	/**
 	 * Run method for Thread subclass.
 	 * 
 	 * Makes a claim with banker, and cycles
@@ -66,6 +58,7 @@ public class Client extends Thread {
 				// Flip a coin to decide request/release
 				Random r = new Random();
 				boolean probAction = r.nextBoolean();
+				System.out.println("Probaction = " + probAction);
 				if(probAction){
 					//Release between 1 and numUnitsAllocated units
 					int releaseUnits = (int) (1 + (Math.random() * (banker.allocated() - 1)));
