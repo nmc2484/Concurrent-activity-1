@@ -60,15 +60,13 @@ public class Banker {
 
 			// TODO Detect safety of state
 			// Deepcopy ClientConfigs
-			List<ClientConfig> copyVals = new ArrayList<ClientConfig>(clientMap
-					.values().size());
-			for (ClientConfig config : clientMap.values()) {
-				copyVals.add(new ClientConfig(config.getUnitsAllocated(),
-						config.getUnitRemaining()));
-			}
+
+            //Creates new has map and adds everything from client map to it
+           HashMap clientMapCopy = new HashMap();
+           clientMapCopy.putAll(clientMap);
 			int copy = unitsOfResource;
 
-			if (bankerAlgorithm(copy, copyVals)) {
+			if (bankerAlgorithm(copy, clientMapCopy)) {
 				System.out.println("Thread " + client.getName() + " has "
 						+ nUnits + " units allocated.");
 				clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated()
@@ -161,17 +159,20 @@ public class Banker {
 	 * @return true if input state is safe, false otherwise
 	 */
 	private boolean bankerAlgorithm(int nUnitsOnHand,
-			List<ClientConfig> copyVals) {
-		
-		ClientConfig[] pairsArray = ((Map<Client, ClientConfig>) copyVals)
-				.values().toArray(new ClientConfig[0]);
+			HashMap copyValls) {
+
+        //creates the array of client configs
+        Object[] ClientConfigPreCopy = copyValls.values().toArray(new ClientConfig[0]);
+        ClientConfig[] ClientConfigCopy = (ClientConfig[]) ClientConfigPreCopy;
+
+
 		System.out.println("pairsArray successfully created!!!!!!");
-		// TODO sort the goddamn array
-        Arrays.sort(pairsArray, new ByUnitsRemaining());
-		for (int i = 0; i < pairsArray.length - 1; i++) {
-			if (pairsArray[i].getUnitRemaining() > nUnitsOnHand)
+		// sorts the array
+        Arrays.sort(ClientConfigCopy, new ByUnitsRemaining());
+		for (int i = 0; i < ClientConfigCopy.length - 1; i++) {
+			if (ClientConfigCopy[i].getUnitRemaining() > nUnitsOnHand)
 				return false;
-			nUnitsOnHand += pairsArray[i].getUnitsAllocated();
+			nUnitsOnHand += ClientConfigCopy[i].getUnitsAllocated();
 		}
 		return true;
 	}
