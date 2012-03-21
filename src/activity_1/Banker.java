@@ -79,7 +79,7 @@ public class Banker {
 				System.out.println("Thread " + client.getName() + " waits.");
 				try {
 					// Thread waits until notified
-					synchronized(client){ client.wait(); } 
+					synchronized (this){this.wait();}
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
 
@@ -127,7 +127,8 @@ public class Banker {
 		// Increment banker's unit pool
 		this.nUnitsOnHand += nUnits;
 		System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
-		notifyAll();
+
+        synchronized (this) {this.notifyAll();}
 		return;
 	}
 
@@ -169,8 +170,13 @@ public class Banker {
 
 		// Perform algorithmic magic
 		for (int i = 0; i < clientConfig.length - 1; i++) {
-			if (clientConfig[i].getUnitsRemaining() > nUnitsOnHand) return false;
-			nUnitsOnHand += clientConfig[i].getUnitsAllocated();
+			if (clientConfig[i].getUnitsRemaining() > nUnitsOnHand){
+            System.out.println(nUnitsOnHand);
+            System.out.println(clientConfig[i].getUnitsRemaining()  ) ;
+            System.out.println("should be false");
+            return false;
+            }
+            nUnitsOnHand += clientConfig[i].getUnitsAllocated();
 		}
 		return true;
 	}
@@ -182,13 +188,7 @@ public class Banker {
 	private class ByUnitsRemaining implements Comparator<ClientConfig>{
 
 		public int compare(ClientConfig configA, ClientConfig configB) {
-			if(configA.getUnitsRemaining() < configB.getUnitsRemaining()) {
-				return -1;
-			} else if (configA.getUnitsRemaining() > configB.getUnitsRemaining()){
-				return 1;
-			} else {
-				return 0;
-			}
+            return configA.getUnitsRemaining() - configB.getUnitsRemaining();
 		}
 	}
 
