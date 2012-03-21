@@ -58,6 +58,7 @@ public class Client extends Thread {
 				// Flip a coin to decide request/release
 				Random r = new Random();
 				boolean probAction = r.nextBoolean();
+                //System.out.println(probAction);
 				System.out.println("Probaction == " + probAction);
 				if(probAction){
 					//Request between 1 and numUnitsAvailable units
@@ -66,7 +67,7 @@ public class Client extends Thread {
 				}
 				else{
 					//Release between 1 and numUnitsAllocated units
-					int releaseUnits = (int) (1 + (Math.random() * (banker.allocated() - 1)));
+					int releaseUnits = 1 + (int) ( (Math.random() * (banker.allocated() - 1)));
 					banker.release(releaseUnits);
 				}
 			}
@@ -76,7 +77,8 @@ public class Client extends Thread {
 				Thread.sleep(randomSleep);
 			} catch (InterruptedException ignore) {/**/}
 		}
-		banker.release(nUnits);
-		return;
+        banker.release(banker.allocated());
+        System.out.println(Client.currentThread().getName() + "terminated");
+        return;
 	}
 }
