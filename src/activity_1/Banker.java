@@ -88,7 +88,8 @@ public class Banker {
 				System.out.println("Thread " + client.getName() + " waits.");
 				try {
 					// Thread waits until notified
-					synchronized (this){this.wait();}
+					//synchronized (this){this.wait();}
+                    synchronized (client){Thread.currentThread().join(); }
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
 
@@ -138,7 +139,7 @@ public class Banker {
 		this.nUnitsOnHand += nUnits;
 		System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
 
-        synchronized (this) {this.notifyAll();}
+        synchronized (Thread.currentThread()) {Thread.currentThread().notifyAll();}
 		return;
 	}
 
