@@ -80,7 +80,7 @@ public class Banker {
 				System.out.println("Thread " + client.getName() + " waits.");
 				try {
 					// Thread waits until notified
-					client.wait();
+					synchronized(client){ client.wait(); } 
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
 				
