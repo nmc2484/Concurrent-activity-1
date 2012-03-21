@@ -50,17 +50,16 @@ public class Banker {
 	public synchronized boolean request(int nUnits) {
 		// Only proceed if this client has been registered
 		if (!clientMap.containsKey((Client) Thread.currentThread())) System.exit(1);
-		
-		// Exit if nUnits is nonpositive or exceeds current thread's remaining claim
+
+		// Exit if nUnits is non-positive or exceeds current thread's remaining claim
 		Client client = (Client) Thread.currentThread();
 		ClientConfig clientConfig = clientMap.get(client);
 		if (nUnits < 1 || nUnits > clientConfig.getUnitRemaining()) {
 			System.exit(1);
 		}
-		
 		System.out.println("Thread " + client.getName() + " requests " + nUnits + " units.");
 
-		// Duplicate parameters for Banker's Algorithm
+		// Duplicate parameters and run Banker's Algorithm
 		HashMap<Client, ClientConfig> dClientMap = new HashMap<Client, ClientConfig>(clientMap);
 		int dUnitsOnHand = nUnitsOnHand;
 		boolean safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
@@ -69,23 +68,36 @@ public class Banker {
 		if (safeState) {
 			System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
 			clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated() + nUnits);
+
 			// Decrement pool of remaining resources by nUnits
 			this.nUnitsOnHand -= nUnits;
 			System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
+			// Return to the caller
+			return true;
 		} else {
-			System.out.println("Thread " + client.getName() + " waits.");
-			try {
-				client.wait();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			while (true) {
+				System.out.println("Thread " + client.getName() + " waits.");
+				try {
+					client.wait();
+				} catch (InterruptedException ignore) {/**/}
+				System.out.println("Thread " + client.getName() + " awakened.");
+				// Duplicate parameters and run Banker's Algorithm
+				dClientMap = new HashMap<Client, ClientConfig>(clientMap);
+				dUnitsOnHand = nUnitsOnHand;
+				safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
+				// If the state created by this state is safe, allocate the units
+				if (safeState) {
+					System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
+					clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated() + nUnits);
+
+					// Decrement pool of remaining resources by nUnits
+					this.nUnitsOnHand -= nUnits;
+					System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
+					// Return to the caller
+					return true;
+				}
 			}
-			System.out.println("Thread " + client.getName() + " awakened.");
 		}
-		// Release nUnits
-		clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated()
-				- nUnits);
-		return true;
 	}
 
 	/**
