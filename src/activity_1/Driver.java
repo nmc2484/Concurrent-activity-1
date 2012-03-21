@@ -6,24 +6,24 @@ public class Driver {
 	/**
 	 * The total amount of resources the banker is able to allocate
 	 */
-	final private static int numBankerResources = 10;
+	final private static int numBankerResources = 20;
 	/**
 	 * The number of clients which will make claims on resources
 	 * owned by the banker
 	 */
-	final private static int numClients = 3;
+	final private static int numClients = 5;
 
 	/**
 	 * Maximum number which any client may claim from the banker
 	 * Note: We randomize the number of units clients may actually claim
 	 */
-	final private static int nUnits = 5;
+	final private static int nUnits = 20;
 
 	/**
 	 * Number of times a client will either request 
 	 * or release resources
 	 */
-	final private static int nRequests = 10;
+	final private static int nRequests = 12;
 
 	/**
 	 * The minimum time a client may sleep after
