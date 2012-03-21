@@ -29,13 +29,12 @@ public class Banker {
 	 * @param nUnits
 	 */
 	public synchronized void setClaim(int nUnits) {
-		System.out.println("Setting claims....");
 		Client client = (Client) Thread.currentThread();
 		if (clientMap.containsKey(client) || nUnits < 1 || nUnits <= totalUnits) {
 			clientMap.put(client, new ClientConfig(nUnits));
 			System.out.println("Thread " + client.getName() + " sets a claim for " + nUnits + " units.");
 		} else {
-			System.out.println("Method preconditions failed - exitting...");
+			System.out.println("Method preconditions failed - exiting...");
 			System.exit(1);
 		}
 	}
@@ -54,7 +53,7 @@ public class Banker {
 		// Exit if nUnits is non-positive or exceeds current thread's remaining claim
 		Client client = (Client) Thread.currentThread();
 		ClientConfig clientConfig = clientMap.get(client);
-		if (nUnits < 1 || nUnits > clientConfig.getUnitRemaining()) {
+		if (nUnits < 1 || nUnits > clientConfig.getUnitsRemaining()) {
 			System.exit(1);
 		}
 		System.out.println("Thread " + client.getName() + " requests " + nUnits + " units.");
@@ -83,12 +82,12 @@ public class Banker {
 					synchronized(client){ client.wait(); } 
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
-				
+
 				// Duplicate parameters and run Banker's Algorithm
 				dClientMap = new HashMap<Client, ClientConfig>(clientMap);
 				dUnitsOnHand = nUnitsOnHand;
 				safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
-				
+
 				// If the state created by this state is safe, allocate the units
 				if (safeState) {
 					System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
@@ -124,7 +123,7 @@ public class Banker {
 		// Release nUnits from client's allocation
 		System.out.println("Thread " + client.getName() + " releases " + nUnits + " units.");
 		clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated()	- nUnits);
-		
+
 		// Increment banker's unit pool
 		this.nUnitsOnHand += nUnits;
 		System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
@@ -138,8 +137,7 @@ public class Banker {
 	 * @return int
 	 */
 	public int allocated() {
-		return clientMap.get((Client) Thread.currentThread())
-		.getUnitsAllocated();
+		return clientMap.get((Client) Thread.currentThread()).getUnitsAllocated();
 	}
 
 	/**
@@ -149,8 +147,7 @@ public class Banker {
 	 * @return int
 	 */
 	public int remaining() {
-		return clientMap.get((Client) Thread.currentThread())
-		.getUnitRemaining();
+		return clientMap.get((Client) Thread.currentThread()).getUnitsRemaining();
 	}
 
 	/**
@@ -163,31 +160,33 @@ public class Banker {
 	 *            currentAllocation and remainingClaim
 	 * @return true if input state is safe, false otherwise
 	 */
-	private boolean bankersAlgorithm(int nUnitsOnHand, HashMap copyValls) {
+	private boolean bankersAlgorithm(int nUnitsOnHand, HashMap<Client, ClientConfig> copyValls) {
+		// Create the array of client configs
+		ClientConfig[] clientConfig = (ClientConfig[])copyValls.values().toArray(new ClientConfig[0]);
 
-		//creates the array of client configs
-		Object[] ClientConfigPreCopy = copyValls.values().toArray(new ClientConfig[0]);
-		ClientConfig[] ClientConfigCopy = (ClientConfig[]) ClientConfigPreCopy;
+		// Sort the array
+		Arrays.sort(clientConfig, new ByUnitsRemaining());
 
-
-		System.out.println("pairsArray successfully created!!!!!!");
-		// sorts the array
-		Arrays.sort(ClientConfigCopy, new ByUnitsRemaining());
-		for (int i = 0; i < ClientConfigCopy.length - 1; i++) {
-			if (ClientConfigCopy[i].getUnitRemaining() > nUnitsOnHand)
-				return false;
-			nUnitsOnHand += ClientConfigCopy[i].getUnitsAllocated();
+		// Perform algorithmic magic
+		for (int i = 0; i < clientConfig.length - 1; i++) {
+			if (clientConfig[i].getUnitsRemaining() > nUnitsOnHand) return false;
+			nUnitsOnHand += clientConfig[i].getUnitsAllocated();
 		}
 		return true;
 	}
 
+	/**
+	 * Private class used to compare ClientConfig objects
+	 * Compares based on unitsRemaining
+	 */
 	private class ByUnitsRemaining implements Comparator<ClientConfig>{
-		public int compare(ClientConfig configA, ClientConfig configB){
-			if(configA.getUnitRemaining() < configB.getUnitRemaining()) {
+
+		public int compare(ClientConfig configA, ClientConfig configB) {
+			if(configA.getUnitsRemaining() < configB.getUnitsRemaining()) {
 				return -1;
-			} else if (configA.getUnitRemaining() > configB.getUnitRemaining()){
+			} else if (configA.getUnitsRemaining() > configB.getUnitsRemaining()){
 				return 1;
-			}else {
+			} else {
 				return 0;
 			}
 		}
@@ -229,7 +228,6 @@ public class Banker {
 
 		/**
 		 * Set the number of units allocated to this client
-		 * 
 		 * Note that the sum of unitsAllocated and unitsRemaining is invariant.
 		 * 
 		 * @param allocated
@@ -245,7 +243,7 @@ public class Banker {
 		 * 
 		 * @return int unitsRemaining
 		 */
-		public synchronized int getUnitRemaining() {
+		public synchronized int getUnitsRemaining() {
 			return unitsRemaining;
 		}
 	}
