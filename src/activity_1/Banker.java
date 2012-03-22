@@ -30,18 +30,20 @@ public class Banker {
 	 * number of units which can be allocated to that thread.
 	 * @param nUnits
 	 */
-	public synchronized void setClaim(int nUnits) {
+	public synchronized void setClaim(int NewnUnits) {
 		Client client = (Client) Thread.currentThread();
-		if (clientMap.containsKey(client) || nUnits > -1 ||  nUnitsLeftToClaim >= 0) {
-			//if(nUnits > nUnitsLeftToClaim){
-			//	nUnits = nUnitsLeftToClaim;
-			//}
-			clientMap.put(client, new ClientConfig(nUnits));
+		if (clientMap.containsKey(client) || NewnUnits > -1 ||  nUnitsLeftToClaim >= 0) {
+			if(NewnUnits > nUnitsLeftToClaim){
+				NewnUnits = nUnitsLeftToClaim;
+			}
+			clientMap.put(client, new ClientConfig(NewnUnits));
 			System.out.println("Thread " + client.getName()
-					+ " sets a claim for " + nUnits + " units.");
-            System.out.println(nUnitsLeftToClaim);
-            System.out.println(nUnits);
-			nUnitsLeftToClaim -= nUnits;
+					+ " sets a claim for " + NewnUnits + " units.");
+            if (nUnitsLeftToClaim == NewnUnits){
+                nUnitsLeftToClaim =0;
+            }else {
+			nUnitsLeftToClaim -= NewnUnits;
+            }
 		} else {
 			System.out.println("Method preconditions failed - exiting...");
 			System.exit(1);
@@ -55,31 +57,34 @@ public class Banker {
 	 *            to request
 	 * @return boolean indicating success of request
 	 */
-	public synchronized boolean request(int nUnits) {
+	public synchronized boolean request(int claimnUnits) {
 		// Only proceed if this client has been registered
-		if (!clientMap.containsKey((Client) Thread.currentThread())) System.exit(1);
+		if (!clientMap.containsKey((Client) Thread.currentThread())) {
+            System.exit(1);}
 
 		// Exit if nUnits is non-positive or exceeds current thread's remaining claim
 		Client client = (Client) Thread.currentThread();
 		ClientConfig clientConfig = clientMap.get(client);
-		if (nUnits < 1 || nUnits > clientConfig.getUnitsRemaining()) {
+		if (claimnUnits < 0 || claimnUnits > clientConfig.getUnitsRemaining()) {
 			System.exit(1);
 		}
-		System.out.println("Thread " + client.getName() + " requests " + nUnits + " units.");
+		System.out.println("Thread " + client.getName() + " requests " + claimnUnits + " units.");
 
 		// Duplicate parameters and run Banker's Algorithm
 		HashMap<Client, ClientConfig> dClientMap = new HashMap<Client, ClientConfig>(clientMap);
-		int dUnitsOnHand = this.nUnitsOnHand;
+		int dUnitsOnHand = nUnitsOnHand;
 		boolean safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
 
 		// If the state created by this state is safe, allocate the units
 		if (safeState) {
-			clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated() + nUnits);
-            System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
+            synchronized (this){
+			clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated() + claimnUnits);
+            System.out.println("Thread " + client.getName() + " has " + claimnUnits + " units allocated.");
 
 			// Decrement pool of remaining resources by nUnits
-			this.nUnitsOnHand -= nUnits;
+			this.nUnitsOnHand -= claimnUnits;
 			System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
+            }
 			// Return to the caller
 			return true;
 		} else {
@@ -88,24 +93,21 @@ public class Banker {
 				System.out.println("Thread " + client.getName() + " waits.");
 				try {
 					// Thread waits until notified
-					//synchronized (this){this.wait();}
-                    synchronized (client){Thread.currentThread().join(); }
+                    synchronized (client){client.wait(); }
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
 
-				// Duplicate parameters and run Banker's Algorithm
-				//dClientMap = new HashMap<Client, ClientConfig>(clientMap);
-				//dUnitsOnHand = this.nUnitsOnHand;
 				safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
 
 				// If the state created by this state is safe, allocate the units
 				if (safeState) {
-					clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated() + nUnits);
-                    System.out.println("Thread " + client.getName() + " has " + nUnits + " units allocated.");
+                    synchronized (this){
+                    this.nUnitsOnHand -= claimnUnits;
+                    System.out.println("Thread " + client.getName() + " has " + claimnUnits + " units allocated.");
 
 					// Decrement pool of remaining resources by nUnits
-					this.nUnitsOnHand -= nUnits;
 					System.out.println("The banker has " + this.nUnitsOnHand + " units remaining.");
+                    }
 					// Return to the caller
 					break;
 				}
@@ -122,15 +124,16 @@ public class Banker {
 	 */
 	public synchronized void release(int nUnits) {
 		// Only proceed if this client has been registered
-		if (!clientMap.containsKey((Client) Thread.currentThread())){ System.exit(1);  }
+		if (!clientMap.containsKey((Client) Thread.currentThread())){System.out.println("third line" );
+            System.exit(1);  }
 
 		// Exit if nUnits is non-positive or exceeds current thread's remaining claim
 		Client client = (Client) Thread.currentThread();
 		ClientConfig clientConfig = clientMap.get(client);
-		if (nUnits < 1 || nUnits > clientConfig.getUnitsAllocated()) {
+		if (nUnits < 0 || nUnits > clientConfig.getUnitsAllocated()) {
 			System.exit(1);
 		}
-
+           else{
 		// Release nUnits from client's allocation
 		System.out.println("Thread " + client.getName() + " releases " + nUnits + " units.");
 		clientConfig.setUnitsAllocated(clientConfig.getUnitsAllocated()	- nUnits);
@@ -141,6 +144,7 @@ public class Banker {
 
         synchronized (Thread.currentThread()) {Thread.currentThread().notifyAll();}
 		return;
+        }
 	}
 
 	/**
@@ -182,14 +186,10 @@ public class Banker {
 		// Perform algorithmic magic
 		for (int i = 0; i < clientConfig.length - 1; i++) {
 			if (clientConfig[i].getUnitsRemaining() > CopynUnitsOnHand){
-           //System.out.println(nUnitsOnHand);
-           //System.out.println(clientConfig[i].getUnitsRemaining()  ) ;
-           System.out.println("should be false");
             return false;
+            } else{
+            CopynUnitsOnHand += clientConfig[i].getUnitsAllocated();   }
             }
-            this.nUnitsOnHand += clientConfig[i].getUnitsAllocated();
-            return true;
-		}
 		return true;
 	}
 
@@ -256,7 +256,7 @@ public class Banker {
 		 * @return int unitsRemaining
 		 */
 		public synchronized int getUnitsRemaining() {
-			return unitsRemaining;
+			return this.unitsRemaining;
 		}
 	}
 }
