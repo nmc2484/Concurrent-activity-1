@@ -39,7 +39,6 @@ public class Client extends Thread {
 	 */
 	public void run() {
 		// Claim nUnits resources
-        System.out.println("this should be " + nUnits);
 		this.banker.setClaim(nUnits);
 		// Cycle nRequests times
 		for (int i = 1; i <= nRequests; i++) {
@@ -53,7 +52,6 @@ public class Client extends Thread {
 				// request an amount between 1 and the maximum claim
 				Random randomGenerator = new Random();
                 int randomInt = randomGenerator.nextInt(banker.remaining()) + 1;
-                System.out.println("the random int" + randomInt);
 				banker.request(randomInt);
 			} else {
 				// This client has already acquired some resources,
@@ -61,21 +59,16 @@ public class Client extends Thread {
 				// Flip a coin to decide request/release
 				Random r = new Random();
 				boolean probAction = r.nextBoolean();
-                //System.out.println(probAction);
-				System.out.println("Probaction == " + probAction);
 				if(probAction){
 					//Request between 1 and numUnitsAvailable units
                     Random randomGenerator = new Random();
                     int randomInt = randomGenerator.nextInt(banker.remaining()) + 1;
-					//int requestUnits = (int) (1 + (Math.random() * (banker.remaining() - 1)));
 					banker.request(randomInt);
 				}
 				else{
 					//Release between 1 and numUnitsAllocated units
                     Random randomGenerator = new Random();
                     int randomInt = randomGenerator.nextInt(banker.allocated()) + 1;
-                    System.out.println("the release random int " + randomInt);
-					//int releaseUnits = 1 + (int) ( (Math.random() * (banker.allocated() - 1)));
 					banker.release(randomInt);
 				}
 			}

@@ -39,8 +39,6 @@ public class Banker {
 			clientMap.put(client, new ClientConfig(NewnUnits));
 			System.out.println("Thread " + client.getName()
 					+ " sets a claim for " + NewnUnits + " units.");
-            System.out.println(nUnitsLeftToClaim);
-            System.out.println(NewnUnits);
             if (nUnitsLeftToClaim == NewnUnits){
                 nUnitsLeftToClaim =0;
             }else {
@@ -62,16 +60,12 @@ public class Banker {
 	public synchronized boolean request(int claimnUnits) {
 		// Only proceed if this client has been registered
 		if (!clientMap.containsKey((Client) Thread.currentThread())) {
-            System.out.println("first line");
             System.exit(1);}
 
 		// Exit if nUnits is non-positive or exceeds current thread's remaining claim
 		Client client = (Client) Thread.currentThread();
 		ClientConfig clientConfig = clientMap.get(client);
 		if (claimnUnits < 0 || claimnUnits > clientConfig.getUnitsRemaining()) {
-            System.out.println("this is nUnits " + claimnUnits);
-            System.out.println("clientcongif remaining " + clientConfig.getUnitsRemaining());
-            System.out.println("second line");
 			System.exit(1);
 		}
 		System.out.println("Thread " + client.getName() + " requests " + claimnUnits + " units.");
@@ -99,14 +93,10 @@ public class Banker {
 				System.out.println("Thread " + client.getName() + " waits.");
 				try {
 					// Thread waits until notified
-					//synchronized (this){this.wait();}
                     synchronized (client){client.wait(); }
 				} catch (InterruptedException ignore) {/**/}
 				System.out.println("Thread " + client.getName() + " awakened.");
 
-				// Duplicate parameters and run Banker's Algorithm
-				//dClientMap = new HashMap<Client, ClientConfig>(clientMap);
-				//dUnitsOnHand = this.nUnitsOnHand;
 				safeState = bankersAlgorithm(dUnitsOnHand, dClientMap);
 
 				// If the state created by this state is safe, allocate the units
@@ -141,9 +131,6 @@ public class Banker {
 		Client client = (Client) Thread.currentThread();
 		ClientConfig clientConfig = clientMap.get(client);
 		if (nUnits < 0 || nUnits > clientConfig.getUnitsAllocated()) {
-            System.out.println("this is nUnits " + nUnits);
-            System.out.println("clientcongif remaining " + clientConfig.getUnitsRemaining());
-            System.out.println("fourth line");
 			System.exit(1);
 		}
            else{
@@ -199,9 +186,6 @@ public class Banker {
 		// Perform algorithmic magic
 		for (int i = 0; i < clientConfig.length - 1; i++) {
 			if (clientConfig[i].getUnitsRemaining() > CopynUnitsOnHand){
-           System.out.println(CopynUnitsOnHand);
-           System.out.println(clientConfig[i].getUnitsRemaining()  ) ;
-           System.out.println("should be false");
             return false;
             } else{
             CopynUnitsOnHand += clientConfig[i].getUnitsAllocated();   }
